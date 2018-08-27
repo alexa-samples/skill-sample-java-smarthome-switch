@@ -1,0 +1,26 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-US": {
+          "summary": "Sample Smart Home Skill - Java - Switch",
+          "examplePhrases": [],
+          "name": "skill-sample-java-smarthome-switch",
+          "description": "A sample Smart Home skill that implements a virtual switch in Java."
+        }
+      },
+      "isAvailableWorldwide": true,
+      "testingInstructions": "",
+      "category": "EDUCATION_AND_REFERENCE",
+      "distributionCountries": []
+    },
+    "apis": {
+      "smartHome": {
+        "endpoint": {
+          "sourceDir": "src/main/java"
+        }
+      }
+    },
+    "manifestVersion": "1.0"
+  }
+}
