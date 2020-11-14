@@ -17,26 +17,28 @@ import org.junit.Test;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.*;
 
 public class AlexaHandlerTest {
 
-    private static String sampleUri = "https://raw.githubusercontent.com/alexa/alexa-smarthome/master/sample_messages/";
+    private static final String SAMPLE_URI = "https://raw.githubusercontent.com/alexa/alexa-smarthome/master/sample_messages/";
 
-    private JSONObject GetResponse(String json) {
+    private JSONObject getResponse(String json) {
 
-        InputStream inputStream = new ByteArrayInputStream(json.getBytes(Charset.forName("UTF-8")) );
-        OutputStream outputStream = new OutputStream()
-        {
-            private StringBuilder sb = new StringBuilder();
+        InputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8) );
+
+        OutputStream outputStream = new OutputStream() {
+
+            private final StringBuilder sb = new StringBuilder();
+
             @Override
-            public void write(int b) throws IOException {
+            public void write(int b) {
                 this.sb.append((char) b );
             }
 
-            public String toString(){
+            public String toString() {
                 return this.sb.toString();
             }
         };
@@ -44,14 +46,18 @@ public class AlexaHandlerTest {
         AlexaHandler.handler(inputStream, outputStream, null);
 
         String responseString = outputStream.toString();
+
         return new JSONObject(responseString);
     }
 
-    private String GetSample(String url)
-    {
+    private String getSample(String url) {
+
         StringBuilder sb = new StringBuilder();
+
         try {
+
             URL iurl = new URL(url);
+
             HttpURLConnection c = (HttpURLConnection)iurl.openConnection();
             c.connect();
             int status = c.getResponseCode();
@@ -75,22 +81,21 @@ public class AlexaHandlerTest {
     }
 
     @Test
-    public void TestAuthorization()
-    {
-        JSONObject response = GetResponse(GetSample(sampleUri + "Authorization/Authorization.AcceptGrant.request.json"));
+    public void testAuthorization() {
+
+        JSONObject response = getResponse(getSample(SAMPLE_URI + "Authorization/Authorization.AcceptGrant.request.json"));
 
         String namespace = response.getJSONObject("event").getJSONObject("header").get("namespace").toString();
         String name = response.getJSONObject("event").getJSONObject("header").get("name").toString();
 
         assertEquals("Namespace should be Alexa.Authorization", "Alexa.Authorization", namespace);
         assertEquals("Name should be AcceptGrant", "AcceptGrant", name);
-
     }
 
     @Test
-    public void TestDiscovery()
-    {
-        JSONObject response = GetResponse(GetSample(sampleUri + "Discovery/Discovery.request.json"));
+    public void testDiscovery() {
+
+        JSONObject response = getResponse(getSample(SAMPLE_URI + "Discovery/Discovery.request.json"));
 
         String namespace = response.getJSONObject("event").getJSONObject("header").get("namespace").toString();
         String name = response.getJSONObject("event").getJSONObject("header").get("name").toString();
@@ -100,9 +105,9 @@ public class AlexaHandlerTest {
     }
 
     @Test
-    public void TestPowerControllerOff()
-    {
-        JSONObject response = GetResponse(GetSample(sampleUri + "PowerController/PowerController.TurnOff.request.json"));
+    public void testPowerControllerOff() {
+
+        JSONObject response = getResponse(getSample(SAMPLE_URI + "PowerController/PowerController.TurnOff.request.json"));
 
         String namespace = response.getJSONObject("event").getJSONObject("header").get("namespace").toString();
         String name = response.getJSONObject("event").getJSONObject("header").get("name").toString();
@@ -110,5 +115,4 @@ public class AlexaHandlerTest {
         assertEquals("Namespace should be Alexa", "Alexa", namespace);
         assertEquals("Name should be Response", "Response", name);
     }
-
 }

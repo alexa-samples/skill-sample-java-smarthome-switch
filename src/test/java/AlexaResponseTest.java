@@ -32,7 +32,7 @@ public class AlexaResponseTest {
     @Test
     public void ResponseCookieTest() {
         AlexaResponse ar = new AlexaResponse();
-        ar.AddCookie("key", "value");
+        ar.addCookie("key", "value");
         JSONObject response = new JSONObject(ar.toString());
         String value = response.getJSONObject("event").getJSONObject("endpoint").getJSONObject("cookie").get("key").toString();
         assertEquals("Key value should be value", value, "value");
@@ -41,8 +41,8 @@ public class AlexaResponseTest {
     @Test
     public void ResponseCookieMultipleTest() {
         AlexaResponse ar = new AlexaResponse();
-        ar.AddCookie("key1", "value1");
-        ar.AddCookie("key2", "value2");
+        ar.addCookie("key1", "value1");
+        ar.addCookie("key2", "value2");
         JSONObject response = new JSONObject(ar.toString());
 
         String value1 = response.getJSONObject("event").getJSONObject("endpoint").getJSONObject("cookie").get("key1").toString();
@@ -59,7 +59,7 @@ public class AlexaResponseTest {
         payloadErrorObject.put("message", "ERROR_MESSAGE");
 
         AlexaResponse ar = new AlexaResponse("Alexa", "ErrorResponse");
-        ar.SetPayload(payloadErrorObject.toString());
+        ar.setPayload(payloadErrorObject.toString());
 
         JSONObject response = new JSONObject(ar.toString());
 
@@ -76,17 +76,17 @@ public class AlexaResponseTest {
 
         AlexaResponse ar = new AlexaResponse("Alexa.Discovery", "Discover.Response");
 
-        JSONObject capability_alexa = new JSONObject(ar.CreatePayloadEndpointCapability("AlexaInterface", "Alexa", "3", null));
+        JSONObject capability_alexa = new JSONObject(ar.createPayloadEndpointCapability("AlexaInterface", "Alexa", "3", null));
 
         JSONObject propertyPowerState = new JSONObject();
         propertyPowerState.put("name", "powerState");
-        JSONObject capability_alexa_powercontroller = new JSONObject(ar.CreatePayloadEndpointCapability("AlexaInterface", "Alexa.PowerController", propertyPowerState.toString(), null));
+        JSONObject capability_alexa_powercontroller = new JSONObject(ar.createPayloadEndpointCapability("AlexaInterface", "Alexa.PowerController", propertyPowerState.toString(), null));
 
         JSONArray capabilities = new JSONArray();
         capabilities.put(capability_alexa);
         capabilities.put(capability_alexa_powercontroller);
 
-        ar.AddPayloadEndpoint("Sample Switch", "sample-switch-01", capabilities.toString());
+        ar.addPayloadEndpoint("Sample Switch", "sample-switch-01", capabilities.toString());
 
         JSONObject response = new JSONObject(ar.toString());
 
