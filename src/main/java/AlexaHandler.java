@@ -13,7 +13,7 @@
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -32,9 +32,10 @@ public class AlexaHandler {
 
     public static void handler(InputStream inputStream, OutputStream outputStream, Context context) {
 
-        String request;
         try {
-            request = getRequest(inputStream);
+
+            String request = getRequest(inputStream);
+
             System.out.println("Request:");
             System.out.println(request);
 
@@ -42,31 +43,40 @@ public class AlexaHandler {
             JSONObject directive = (JSONObject) jsonRequest.get("directive");
             JSONObject header = (JSONObject) directive.get("header");
 
-            AlexaResponse ar;
+            AlexaResponse alexaResponse;
 
             String namespace = header.optString("namespace", "INVALID");
             String correlationToken = header.optString("correlationToken", "INVALID");
+
             switch(namespace) {
 
                 case "Alexa.Authorization":
+
                     System.out.println("Found Alexa.Authorization Namespace");
-                    ar = new AlexaResponse("Alexa.Authorization","AcceptGrant", "INVALID", "INVALID", correlationToken);
+                    alexaResponse = new AlexaResponse("Alexa.Authorization","AcceptGrant", "INVALID", "INVALID", correlationToken);
+
                     break;
 
                 case "Alexa.Discovery":
+
                     System.out.println("Found Alexa.Discovery Namespace");
-                    ar = new AlexaResponse("Alexa.Discovery", "Discover.Response");
-                    String capabilityAlexa = ar.CreatePayloadEndpointCapability("AlexaInterface", "Alexa", "3", null);
-                    String capabilityAlexaPowerController = ar.CreatePayloadEndpointCapability("AlexaInterface", "Alexa.PowerController", "3", "{\"supported\": [ { \"name\": \"powerState\" } ] }");
+
+                    alexaResponse = new AlexaResponse("Alexa.Discovery", "Discover.Response");
+
+                    String capabilityAlexa = alexaResponse.createPayloadEndpointCapability("AlexaInterface", "Alexa", "3", null);
+                    String capabilityAlexaPowerController = alexaResponse.createPayloadEndpointCapability("AlexaInterface", "Alexa.PowerController", "3", "{\"supported\": [ { \"name\": \"powerState\" } ] }");
                     String capabilities = "[" + capabilityAlexa + ", " + capabilityAlexaPowerController + "]";
-                    ar.AddPayloadEndpoint("Sample Switch", "sample-switch-01", capabilities);
+
+                    alexaResponse.addPayloadEndpoint("Sample Switch", "sample-switch-01", capabilities);
 
                     // For another way to see how to craft an AlexaResponse, have a look at AlexaResponseTest:ResponseDiscovery
 
                     break;
 
                 case "Alexa.PowerController":
+
                     System.out.println("Found Alexa.PowerController Namespace");
+
                     String endpointId = directive.getJSONObject("endpoint").optString("endpointId", "INVALID");
                     String token = directive.getJSONObject("endpoint").getJSONObject("scope").optString("token", "INVALID");
                     String powerStateValue = directive.getJSONObject("header").optString("name", "TurnOn");
@@ -74,33 +84,36 @@ public class AlexaHandler {
 
                     // Set the value in the DynamodDB table SampleSmartHome
                     if(sendDeviceState(endpointId, "powerState", value)) {
-                        ar = new AlexaResponse("Alexa", "Response", endpointId, token, correlationToken);
-                        ar.AddContextProperty("Alexa.PowerController", "powerState", value, 200);
-                    }
-                    else {
-                        ar = new AlexaResponse("Alexa", "ErrorResponse");
+
+                        alexaResponse = new AlexaResponse("Alexa", "Response", endpointId, token, correlationToken);
+                        alexaResponse.addContextProperty("Alexa.PowerController", "powerState", value, 200);
+
+                    } else {
+
+                        alexaResponse = new AlexaResponse("Alexa", "ErrorResponse");
                     }
 
                     break;
 
                 default:
+
                     System.out.println("INVALID Namespace");
-                    ar = new AlexaResponse();
+                    alexaResponse = new AlexaResponse();
+
                     break;
             }
 
             System.out.println("Response:");
-            System.out.println(ar);
+            System.out.println(alexaResponse);
 
-            outputStream.write(ar.toString().getBytes(Charset.forName("UTF-8")));
-        }
-        catch (Exception e)
-        {
+            outputStream.write(alexaResponse.toString().getBytes(StandardCharsets.UTF_8));
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    static boolean sendDeviceState(String endpoint_id, String state, String value) {
+    static boolean sendDeviceState(String endpointId, String state, String value) {
 
         String attributeValue = state + "Value";
 
@@ -111,7 +124,7 @@ public class AlexaHandler {
 
         UpdateItemSpec updateItemSpec =
                 new UpdateItemSpec()
-                        .withPrimaryKey("ItemId", endpoint_id)
+                        .withPrimaryKey("ItemId", endpointId)
                         .withUpdateExpression("set #v = :val1")
                         .withNameMap(new NameMap().with("#v", attributeValue))
                         .withValueMap(new ValueMap().withString(":val1", value))
@@ -123,7 +136,7 @@ public class AlexaHandler {
         return true;
     }
 
-    static String getRequest(java.io.InputStream is) {
+    static String getRequest(InputStream is) {
         Scanner s = new Scanner(is).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
     }
